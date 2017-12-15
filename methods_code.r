@@ -1,23 +1,72 @@
 
 
 # 1. KNN
-
-distance <- function(a, b) return(sqrt((a[1]-b[1])^2+(a[2]-b[2])^2+(a[3]-b[3])^2+(a[4]-b[4])^2))
+set.seed(1)
+training_rows <- sort(c(sample(1:50, 40), sample(51:100, 40), sample(101:150, 40)))
+training_x <- as.matrix(iris[training_rows, 1:4])
+training_y <- iris[training_rows, 5]
+iris_new <- iris[training_rows, ]
 
 library(dplyr)
-iris_knn <- function(x, k){
-  n <- sort(sample(1:dim(iris)[1], .7*dim(iris)[1]))
-  train_x <- as.matrix(iris[n,1:4])
-  train_y <- data.frame(iris[n,5])
-  colnames(train_y) <- names(iris)[5]
-  train_y$dis <- NULL
-  for (i in dim(train_x)[1]){
-    train_y$dis[i] <- distance(as.vector(x), as.vector(train_x[i,]))
-  }
-  train_y <- arrange(train_y, dis)[1:k,] %>% group_by(Species) %>% count(Species) %>% arrange(desc(n))
-  return(as.character(train_y$Species[1]))
+distance <- function(a, b){
+  return (sqrt((a[1]-b[1])^2+(a[2]-b[2])^2+(a[3]-b[3])^2+(a[4]-b[4])^2))
 }
+
+iris_knn <- function(x, trainx, trainy, k){
+  trainy <- data.frame(trainy)
+  colnames(trainy) <- "Species"
+  trainy$dis <- NULL
+  for (i in 1:dim(trainx)[1]){
+    trainy$dis[i] <- distance(as.vector(x), as.vector(trainx[i,]))
+  }
+  trainy <- arrange(trainy, dis)
+  # if distance ties, expand the k
+  while(trainy$dis[k] == trainy$dis[k+1]){
+    k <- k+1
+  }
+  new_trainy <- trainy[1:k, ] %>% group_by(Species) %>% count(Species) %>% arrange(desc(n))
+  # if 3 species within k
+  if (dim(new_trainy)[1] == 3){
+    if (new_trainy$n[1] == new_trainy$n[2] & new_trainy$n[1] == new_trainy$n[3]){
+      # if all species tie, choose the closest one other than itself
+      result <- trainy$Species[2] 
+    } else if (new_trainy$n[1] == new_trainy$n[2] & new_trainy$n[1] != new_trainy$n[3]){
+      # if first two species ties, choose the cloeset distance between two species
+      trainy <- trainy[-which(trainy$Species == new_trainy$Species[3]),]
+      result <- trainy$Species[2] 
+    }
+    # if 2 species within k
+  } else if (dim(new_trainy)[1] == 2){
+    trainy <- trainy[which(trainy$Species == new_trainy$Species[1] | trainy$Species == new_trainy$Species[2]), ] # exclude the 3rd specy
+    if (new_trainy$n[1] == new_trainy$n[2]){
+      # if 2 species ties, output the closest one
+      result <- trainy$Species[2] 
+    } else {
+      # otherwise output the most species between them
+      result <- new_trainy$Species[1]
+    }
+  } else result <- new_trainy$Species # if only 1 specy within k, output this specy
+  return(as.character(result))
+}
+
+set.seed(100)
+test_point <- NULL
+for (i in 1:4){
+  test_point <- append(test_point, runif(1, min(iris[,i]), max(iris[,i])))
+}
+test_point
+iris_knn(test_point, training_x, training_y, 5)
+
+iris_new <- iris
+iris_new <- rbind(iris_new, append(test_point, NA))
+
+iris_new$Species <- factor(iris_new[,5], levels=c(levels(iris_new[,5]), paste(iris_knn(test_point, training_x, training_y, 5), "test")))
+iris_new$Species[151] <- paste(iris_knn(test_point, training_x, training_y, 5), "test")
+
+plot_ly(iris_new, x = ~Sepal.Length, y = ~Sepal.Width, z = ~Petal.Length, color = ~Species)
   
+
+
 # 2. Kmeans
   
 # data preparing
