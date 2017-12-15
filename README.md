@@ -1,6 +1,8 @@
 # Classification
 
-1. KNN  
+1. k-nearest neighbors (kNN)
+![](https://github.com/jebyliang/Images/blob/master/kNN%20before.png)
+![](https://github.com/jebyliang/Images/blob/master/kNN%20after.png)
 
 2. ANN  
 
