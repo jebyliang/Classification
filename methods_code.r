@@ -1,6 +1,6 @@
-
-
 # 1. KNN
+plot_ly(iris, x = ~Sepal.Length, y = ~Sepal.Width, z = ~Petal.Length, color = ~Species)  %>% layout(title = "Original iris scatter plot")
+
 set.seed(1)
 training_rows <- sort(c(sample(1:50, 40), sample(51:100, 40), sample(101:150, 40)))
 training_x <- as.matrix(iris[training_rows, 1:4])
@@ -55,15 +55,15 @@ for (i in 1:4){
   test_point <- append(test_point, runif(1, min(iris[,i]), max(iris[,i])))
 }
 test_point
+[1] 5.4079580 2.6184140 4.2587024 0.2353196
 iris_knn(test_point, training_x, training_y, 5)
-
+[1] "versicolor"
 iris_new <- iris
 iris_new <- rbind(iris_new, append(test_point, NA))
-
 iris_new$Species <- factor(iris_new[,5], levels=c(levels(iris_new[,5]), paste(iris_knn(test_point, training_x, training_y, 5), "test")))
 iris_new$Species[151] <- paste(iris_knn(test_point, training_x, training_y, 5), "test")
+plot_ly(iris_new, x = ~Sepal.Length, y = ~Sepal.Width, z = ~Petal.Length, color = ~Species)  %>% layout(title = "iris scatter plot with TEST POINT")
 
-plot_ly(iris_new, x = ~Sepal.Length, y = ~Sepal.Width, z = ~Petal.Length, color = ~Species)
   
 
 
